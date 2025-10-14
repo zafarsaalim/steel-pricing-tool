@@ -64,7 +64,8 @@ ctk.set_default_color_theme("blue")
 
 app = ctk.CTk()
 app.title("Steel Pricing Calculator")
-app.geometry("700x580")
+app.geometry("800x600")
+app.resizable(False, False)
 app.minsize(600, 500)
 
 ctk.CTkLabel(app, text="Steel Price Calculator (Internal Use)", font=("Arial", 20, "bold")).pack(pady=10)
