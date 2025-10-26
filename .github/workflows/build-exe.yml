@@ -16,13 +16,8 @@ jobs:
 
       - run: pip install pyinstaller customtkinter pyzbar pillow opencv-python
 
-      # Copy the DLL to the build directory
-      - run: |
-          mkdir -p dist/libs
-          copy libs\libzbar-64.dll dist\libs\
-
-      # Build the EXE and include the DLL
-      - run: pyinstaller --onefile --add-binary "dist/libs/libzbar-64.dll;." barcode.py
+      # Build the EXE and include zbar.dll from the repo
+      - run: pyinstaller --onefile --add-binary "libs/libzbar-64.dll;." barcode.py
 
       - uses: actions/upload-artifact@v4
         with:
