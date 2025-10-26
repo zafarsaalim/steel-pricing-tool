@@ -13,8 +13,8 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install pyinstaller customtkinter
-      - run: pyinstaller --onefile shop_management/main.py
+      - run: pyinstaller --onefile barcode.py
       - uses: actions/upload-artifact@v4
         with:
-          name: shop_management 
-          path: dist/main.exe
+          name: barcode 
+          path: dist/barcode.exe
