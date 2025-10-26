@@ -1,4 +1,4 @@
-name: Build EXE
+name: Build Barcode Scanner EXE
 
 on:
   push:
@@ -7,19 +7,42 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
+    strategy:
+      matrix:
+        arch: [win32, x64]   # Build for 32-bit and 64-bit
 
-      - uses: actions/setup-python@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - run: pip install pyinstaller customtkinter pyzbar pillow opencv-python
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
 
-      # Build the EXE and include zbar.dll from the repo
-      - run: pyinstaller --onefile --add-binary "libs/libzbar-64.dll;." barcode.py
+      - name: Determine version
+        id: version
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          echo "VERSION=1.0.$COMMIT_COUNT" >> $GITHUB_ENV
+          echo "Built version: $VERSION"
 
-      - uses: actions/upload-artifact@v4
+      - name: Build EXE
+        run: |
+          if [ "${{ matrix.arch }}" == "win32" ]; then
+            PYINSTALLER_ARGS="--onefile --windowed --name barcode_scanner_32"
+          else
+            PYINSTALLER_ARGS="--onefile --windowed --name barcode_scanner_64"
+          fi
+          pyinstaller $PYINSTALLER_ARGS barcode_scanner.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: barcode
-          path: dist/barcode.exe
+          name: barcode-scanner-${{ matrix.arch }}-v${{ env.VERSION }}
+          path: dist/*
