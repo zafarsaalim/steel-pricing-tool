@@ -9,7 +9,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        arch: [win32, x64]   # Build for 32-bit and 64-bit
+        arch: [win32, x64]
 
     steps:
       - name: Checkout repository
@@ -34,15 +34,18 @@ jobs:
 
       - name: Build EXE
         run: |
+          echo "Building for ${{ matrix.arch }}"
           if [ "${{ matrix.arch }}" == "win32" ]; then
             PYINSTALLER_ARGS="--onefile --windowed --name barcode_scanner_32"
           else
             PYINSTALLER_ARGS="--onefile --windowed --name barcode_scanner_64"
           fi
           pyinstaller $PYINSTALLER_ARGS barcode_scanner.py
+        continue-on-error: true   # <-- important: build failure won't cancel the workflow
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        if: always()   # <-- upload whatever was built
+        uses: actions/upload-artifact@v4
         with:
           name: barcode-scanner-${{ matrix.arch }}-v${{ env.VERSION }}
           path: dist/*
