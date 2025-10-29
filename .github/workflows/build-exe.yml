@@ -1,28 +1,25 @@
-jobs:
-  build_old:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Build existing app
-        run: |
-          echo "Running your old EXE build"
-          # your existing build commands here
+name: Build EXE Files
 
+# 👇 This section tells GitHub WHEN to run the action
+on:
+  push:
+    branches:
+      - main        # runs when you push to main branch
+  workflow_dispatch:  # lets you run it manually from GitHub UI
+
+jobs:
   build_flask_inventory:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install Flask app dependencies
+      - name: Install dependencies
         working-directory: flask_inventory
         run: |
           pip install -r requirements.txt
@@ -33,7 +30,7 @@ jobs:
         run: |
           pyinstaller --onefile --noconsole --add-data "templates;templates" app.py
 
-      - name: Upload Flask Inventory artifact
+      - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
           name: flask_inventory_exe
