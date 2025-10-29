@@ -1,18 +1,20 @@
-name: Build EXE Files
+name: Build Flask Inventory EXE
 
-# 👇 This section tells GitHub WHEN to run the action
 on:
   push:
-    branches:
-      - main        # runs when you push to main branch
-  workflow_dispatch:  # lets you run it manually from GitHub UI
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build_flask_inventory:
     runs-on: windows-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Verify folder
+        run: dir
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -20,13 +22,13 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        working-directory: flask_inventory
+        working-directory: ./flask_inventory
         run: |
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build Flask Inventory EXE
-        working-directory: flask_inventory
+      - name: Build EXE
+        working-directory: ./flask_inventory
         run: |
           pyinstaller --onefile --noconsole --add-data "templates;templates" app.py
 
