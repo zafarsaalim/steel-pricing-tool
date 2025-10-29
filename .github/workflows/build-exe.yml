@@ -1,46 +1,40 @@
-name: Build Barcode Scanner EXE
-
-on:
-  push:
-    branches: [main]
-
 jobs:
-  build:
+  build_old:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [win32, x64]
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build existing app
+        run: |
+          echo "Running your old EXE build"
+          # your existing build commands here
+
+  build_flask_inventory:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install Flask app dependencies
+        working-directory: flask_inventory
         run: |
-          python -m pip install --upgrade pip
-          pip install opencv-python pyzbar pillow pyinstaller
+          pip install -r requirements.txt
+          pip install pyinstaller
 
-      - name: Build barcode_scanner.py EXE
+      - name: Build Flask Inventory EXE
+        working-directory: flask_inventory
         run: |
-          echo "Building for ${{ matrix.arch }}"
-          if [ "${{ matrix.arch }}" == "win32" ]; then
-            NAME=barcode_scanner_32
-          else
-            NAME=barcode_scanner_64
-          fi
-          pyinstaller --onefile --name $NAME --hidden-import pyzbar.pyzbar barcode_scanner.py
-        continue-on-error: false
+          pyinstaller --onefile --noconsole --add-data "templates;templates" app.py
 
-      - name: Upload artifacts
-        if: always()
+      - name: Upload Flask Inventory artifact
         uses: actions/upload-artifact@v4
         with:
-          name: barcode-scanner-${{ matrix.arch }}
-          path: |
-            dist/barcode_scanner_32.exe
-            dist/barcode_scanner_64.exe
+          name: flask_inventory_exe
+          path: flask_inventory/dist/app.exe
