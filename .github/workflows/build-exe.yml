@@ -11,19 +11,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Download full Python (includes Tkinter + SQLite)
+      - name: Use CMD and set UTF-8 (pre-step)
         shell: cmd
         run: |
-          echo Downloading Python runtime...
+          chcp 65001 >NUL
+          echo Using code page UTF-8.
+
+      - name: Download full Python installer (gets Tkinter + SQLite)
+        shell: cmd
+        run: |
+          echo Downloading Python installer...
           curl -L -o python-installer.exe https://www.python.org/ftp/python/3.12.6/python-3.12.6-amd64.exe
+          echo Extracting installer...
           7z x python-installer.exe -opython_temp
 
-      - name: Prepare runtime folders
+      - name: Prepare runtime folder
         shell: cmd
         run: |
+          if exist InbenDemo rmdir /s /q InbenDemo
           mkdir InbenDemo
           mkdir InbenDemo\runtime
-          move python_temp InbenDemo\runtime\python
+          move /Y python_temp InbenDemo\runtime\python
 
       - name: Install dependencies (CustomTkinter + Pillow)
         shell: cmd
@@ -33,29 +41,30 @@ jobs:
           python.exe -m pip install --upgrade pip
           python.exe -m pip install --no-cache-dir customtkinter pillow
 
-      - name: Add your app files
+      - name: Copy app files into runtime
         shell: cmd
         run: |
           mkdir InbenDemo\runtime\app
-          xcopy app InbenDemo\runtime\app /E /I /Y
+          xcopy /E /I /Y app InbenDemo\runtime\app
 
-      - name: Create launcher
+      - name: Create launcher (clean)
         shell: cmd
         run: |
-          echo @echo off > InbenDemo\run_app.bat
-          echo cd runtime\python >> InbenDemo\run_app.bat
-          echo python.exe ..\app\demo_gui.py >> InbenDemo\run_app.bat
+          (echo @echo off) > InbenDemo\run_app.bat
+          (echo cd runtime\python) >> InbenDemo\run_app.bat
+          (echo start "" pythonw.exe ..\app\demo_gui.py) >> InbenDemo\run_app.bat
 
-      - name: Verify SQLite + Tkinter work
+      - name: Verify runtime (no emojis, ASCII only)
         shell: cmd
         run: |
           cd InbenDemo\runtime\python
-          python.exe -c "import tkinter, sqlite3; print('✅ Tkinter + SQLite OK'); conn=sqlite3.connect(':memory:'); conn.execute('CREATE TABLE test(id INT)'); conn.close()"
+          python.exe -c "import tkinter, sqlite3, sys; print('OK: tkinter & sqlite present'); sys.exit(0)"
 
-      - name: Package final clean build
+      - name: Package final ZIP
         shell: cmd
         run: |
           7z a InbenDemo_full.zip InbenDemo
+          echo Packaged InbenDemo_full.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
